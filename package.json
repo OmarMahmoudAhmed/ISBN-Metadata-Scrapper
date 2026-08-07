@@ -1,0 +1,32 @@
+{
+  "name": "isbn-processor",
+  "version": "2.0.0",
+  "private": true,
+  "description": "معالج بيانات ISBN الذكي — يستخرج بيانات وصفية للكتب من Open Library عبر ملف Excel، مع تصدير Excel و JSON.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "verify": "tsx scripts/verify.ts"
+  },
+  "dependencies": {
+    "next": "14.2.35",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "lucide-react": "1.28.0",
+    "xlsx": "0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "eslint": "8.57.1",
+    "eslint-config-next": "14.2.35",
+    "typescript": "5.9.3",
+    "tsx": "4.23.9"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  }
+}
