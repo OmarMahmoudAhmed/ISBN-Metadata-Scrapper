@@ -96,6 +96,66 @@ export async function fetchBatchFromOpenLibrary(
   }
 }
 
+/**
+ * fetchFromOpenLibrarySearch — مستوى ثانٍ داخل Open Library نفسها، قبل
+ * الخروج لأي مصدر خارجي. /search.json يستخدم فهرساً مختلفاً عن bibkeys
+ * (المستخدَم في fetchBatchFromOpenLibrary أعلاه) وأحياناً يحتوي طبعات
+ * غير موجودة في الفهرس الأول — بلا أي تكلفة إضافية أو مفتاح API.
+ * يُستدعى لكل ISBN على حدة (لا يدعم bibkeys الدفعية)، لذا يُفضَّل تطبيقه
+ * فقط على الأكواد التي فشل فيها bibkeys (راجع lib/cascade.ts).
+ */
+export async function fetchFromOpenLibrarySearch(isbn: string): Promise<BookData | null> {
+  const url = `https://openlibrary.org/search.json?isbn=${encodeURIComponent(
+    isbn
+  )}&fields=title,author_name,publisher,first_publish_year,number_of_pages_median,cover_i,subject&limit=1`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      cache: 'no-store',
+      headers: { 'User-Agent': 'ISBN-Metadata-Processor/2.0 (+https://github.com)' },
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as {
+      docs?: {
+        title?: string;
+        author_name?: string[];
+        publisher?: string[];
+        first_publish_year?: number;
+        number_of_pages_median?: number;
+        cover_i?: number;
+        subject?: string[];
+      }[];
+    };
+
+    const doc = data.docs?.[0];
+    if (!doc) return null;
+
+    return {
+      isbn,
+      found: true,
+      title: doc.title || 'غير متوفر',
+      authors: doc.author_name?.filter(Boolean).join('، ') || 'غير متوفر',
+      publisher: doc.publisher?.filter(Boolean).join('، ') || 'غير متوفر',
+      publishedDate: doc.first_publish_year ? String(doc.first_publish_year) : 'غير متوفر',
+      pageCount: doc.number_of_pages_median ?? null,
+      language: 'غير متوفر',
+      thumbnail: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` : null,
+      categories: doc.subject?.slice(0, 5).join('، ') || '',
+      source: 'Open Library (بحث)',
+    };
+  } catch {
+    clearTimeout(timeoutId);
+    return null;
+  }
+}
+
 /** chunkArray — يقسم مصفوفة إلى دفعات (chunks) بحجم ثابت */
 export function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];

@@ -1,9 +1,11 @@
 import type { FieldKey } from './types';
 
 /**
- * fields.ts — الحقول القابلة للاختيار من بيانات Open Library
- * القائمة مطابقة تماماً لما ورد في مواصفات v2 (قسم "تحديد الحقول المطلوبة"):
- * العنوان، المؤلف، الناشر، سنة النشر، عدد الصفحات، صورة الغلاف، اللغة، التصنيفات.
+ * fields.ts — الحقول القابلة للاختيار من بيانات الكتاب
+ * الحقول الثمانية الأولى مطابقة تماماً لمواصفات v2 الأصلية. حقل "المصدر"
+ * أُضيف لاحقاً مع سلسلة المصادر المتدرجة (lib/cascade.ts) — أصبح ذا قيمة
+ * حقيقية الآن (يتغيّر فعلاً حسب أي مستوى أجاب: Open Library/Google
+ * Books/Wikidata)، بخلاف السابق حين كان دائماً "Open Library" ثابتاً.
  */
 
 export interface FieldOption {
@@ -20,6 +22,7 @@ export const FIELD_OPTIONS: FieldOption[] = [
   { key: 'thumbnail', label: 'صورة الغلاف' },
   { key: 'language', label: 'اللغة' },
   { key: 'categories', label: 'التصنيفات' },
+  { key: 'source', label: 'المصدر' },
 ];
 
 export const DEFAULT_SELECTED_FIELDS: FieldKey[] = FIELD_OPTIONS.map((f) => f.key);

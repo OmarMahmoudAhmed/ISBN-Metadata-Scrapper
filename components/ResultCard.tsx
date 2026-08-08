@@ -120,6 +120,12 @@ export default function ResultCard({ isbn, index, data, selectedFields, visible 
               <div className="data-val">{data.categories || '—'}</div>
             </div>
           )}
+          {has('source') && (
+            <div className="data-item">
+              <div className="data-key">المصدر</div>
+              <div className="data-val">{data.source || '—'}</div>
+            </div>
+          )}
         </div>
       )}
 

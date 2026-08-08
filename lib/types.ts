@@ -41,7 +41,8 @@ export type FieldKey =
   | 'pageCount'
   | 'thumbnail'
   | 'language'
-  | 'categories';
+  | 'categories'
+  | 'source';
 
 export type FilterType = 'all' | 'success' | 'error' | 'warning';
 export type ActivityType = 'success' | 'error' | 'info' | 'warn';
@@ -71,11 +72,16 @@ export interface ProcessingStats {
 /** جسم الطلب المُرسَل إلى POST /api/books */
 export interface BooksApiRequestBody {
   isbns: string[];
+  /** إن كانت true، يتخطى الخادم Google Books كلياً لهذه الدفعة (بعد رؤية
+   *  تجاوز حصة سابق في نفس الجلسة — راجع lib/cascade.ts) */
+  skipGoogleBooks?: boolean;
 }
 
 /** جسم الاستجابة القادم من POST /api/books */
 export interface BooksApiResponseBody {
   outcomes: Record<string, BookData>;
+  /** true إن رصد الخادم تجاوز حصة Google Books أثناء هذه الدفعة */
+  googleBooksQuotaExceeded?: boolean;
 }
 
 export interface BooksApiErrorBody {

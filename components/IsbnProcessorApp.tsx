@@ -63,6 +63,10 @@ export default function IsbnProcessorApp() {
 
   const shouldStopRef = useRef(false);
   const rateLimiterRef = useRef(createRateLimiterState());
+  // لا تُصفَّر في startProcessing/resetAll عمداً — تجاوز الحصة حقيقة على
+  // مستوى الجلسة كلها (تبويب المتصفح)، وليس على مستوى تشغيلة معالجة واحدة،
+  // تماماً كفلسفة resultsCache في lib/cache.ts.
+  const googleBooksDisabledRef = useRef(false);
 
   const addActivity = useCallback((text: string, type: ActivityType = 'info') => {
     setActivity((prev) => {
@@ -218,11 +222,17 @@ export default function IsbnProcessorApp() {
         const res = await fetch('/api/books', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isbns: batchIsbns }),
+          body: JSON.stringify({ isbns: batchIsbns, skipGoogleBooks: googleBooksDisabledRef.current }),
         });
         const json = (await res.json()) as BooksApiResponseBody & { error?: string };
         if (!res.ok) throw new Error(json?.error || 'فشل الطلب');
         outcomes = json.outcomes;
+
+        if (json.googleBooksQuotaExceeded && !googleBooksDisabledRef.current) {
+          googleBooksDisabledRef.current = true;
+          addActivity('⚠️ تم تجاوز حصة Google Books اليومية — سيُعتمَد على Open Library وWikidata فقط لبقية الجلسة', 'warn');
+          showToast('تم تجاوز حصة Google Books اليومية، سيُكمَل بالمصادر الأخرى', 'warning', 5000);
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'فشل الطلب';
         batchIsbns.forEach((isbn) => {
